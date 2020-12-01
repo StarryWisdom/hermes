@@ -122,8 +122,7 @@ public:
 	//for enqueue_client_write really should take a std::deque<std::byte> but that is not praticial at this time
 	void enqueue_client_write(packet_buffer& buffer) {
 		std::deque<std::byte> tmp{buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
-		parse_s2c_packet(tmp);
-		enqueue_client_write_inner(tmp);
+		enqueue_client_write(tmp);
 	}
 
 	// sometimes its easier to have a vector - this is due to for example spliting artemis packets if they will go beyond max length
@@ -134,8 +133,13 @@ public:
 	}
 
 	//enqueue_client_writes really should be reworked be const, then it can be a reference instead
-	void enqueue_client_write_slow(packet_buffer buffer) {
+	[[deprecated]] void enqueue_client_write_slow(packet_buffer buffer) {
 		enqueue_client_write(buffer);
+	}
+
+	void enqueue_client_write(const std::deque<std::byte>& buffer) {
+		parse_s2c_packet(buffer);
+		enqueue_client_write_inner(buffer);
 	}
 
 	std::vector<packet_buffer> stationary_fixup() {

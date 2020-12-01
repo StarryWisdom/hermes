@@ -144,11 +144,12 @@ TEST_F (artemis_packet_test,docked) {
 }
 
 TEST_F (artemis_packet_test,popup) {
-	buffer=artemis_packet::server_to_client::make_popup("a");
-	check_simple_event_header(artemis_packet::simple_event::popup);
-	EXPECT_EQ(buffer.read<uint32_t>(),2u);
-	EXPECT_EQ(buffer.read<uint16_t>(),'a');
-	EXPECT_EQ(buffer.read<uint16_t>(),0u);
+	const auto buffer=artemis_packet::server_to_client::make_popup("a");
+	EXPECT_EQ(buffer.size(),36);
+	check_simple_event_header(buffer,artemis_packet::simple_event::popup);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,28),2u);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,32),'a');
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,34),0u);
 }
 
 TEST_F (artemis_packet_test,game_start) {

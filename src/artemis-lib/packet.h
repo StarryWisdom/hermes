@@ -9,6 +9,7 @@
 #include "core-lib/packet_buffer.h"
 #include "jam32.h"
 #include "core-lib/string-util.h"
+#include "core-lib/memory_buffer.h"
 
 class artemis_packet {
 public:
@@ -388,10 +389,12 @@ public:
 			});
 		};
 
-		static packet_buffer make_popup(std::string msg) {
-			return make_simple_event(simple_event::popup,[=](packet_buffer& buffer) {
-				buffer.write_artemis_string(msg);
-			});
+		static std::deque<std::byte> make_popup(std::string msg) {
+			std::deque<std::byte> buffer;
+			buffer::write_artemis_string(buffer,msg);
+
+			add_simple_event_header(buffer,simple_event::popup);
+			return buffer;
 		}
 
 		static packet_buffer make_docked(uint32_t id) {
@@ -419,13 +422,23 @@ public:
 			});
 		}
 	private:
-		template <typename fun> static packet_buffer make_simple_event(simple_event subtype, fun f) {
+		static void add_simple_event_header(std::deque<std::byte>& buffer, const simple_event subtype) {
+			buffer::push_front(buffer,static_cast<uint32_t>(subtype));
+			add_artemis_header(buffer,simple_event_jam32);
+		}
+
+		static void add_artemis_header(std::deque<std::byte>& buffer, uint32_t id) {
+			artemis_packet::add_artemis_header(buffer,direction::server_to_client,id);
+
+		}
+
+		template <typename fun> static packet_buffer make_simple_event(simple_event subtype, fun f) [[deprecated]] {
 			return make_buffer(simple_event_jam32,[=](packet_buffer& buffer) {
 					buffer.write<uint32_t>(static_cast<uint32_t>(subtype));
 					f(buffer);
 				});
 		}
-		template <typename fun> static packet_buffer make_buffer(uint32_t id, fun f) {
+		template <typename fun> static packet_buffer make_buffer(uint32_t id, fun f) [[deprecated]] {
 			return artemis_packet::make_buffer(direction::server_to_client,id,f);
 		}
 	};
@@ -584,7 +597,7 @@ public:
 		return buffer;
 	}
 private:
-	template <typename func> static packet_buffer make_buffer(direction direction, uint32_t id, func f) {
+	template <typename func> static packet_buffer make_buffer(direction direction, uint32_t id, func f) [[deprecated]]{
 		packet_buffer buffer=make_post_header_buffer();
 		f(buffer);
 
@@ -598,5 +611,15 @@ private:
 		buffer.write<uint32_t>(id);//packet type
 		buffer.write_offset=size_offset;
 		return buffer;
+	}
+
+	static void add_artemis_header(std::deque<std::byte>& buffer, direction direction, uint32_t id)
+	{
+		buffer::push_front<uint32_t>(buffer,id);
+		buffer::push_front<uint32_t>(buffer,buffer.size());
+		buffer::push_front<uint32_t>(buffer,0);
+		buffer::push_front<uint32_t>(buffer,static_cast<uint32_t>(direction));
+		buffer::push_front<uint32_t>(buffer,buffer.size()+8);
+		buffer::push_front<uint32_t>(buffer,0xdeadbeef);
 	}
 };

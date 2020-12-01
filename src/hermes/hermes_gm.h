@@ -107,7 +107,7 @@ public:
 				[ship_num, console]
 				(auto& prox, uint32_t) {
 					if (prox.ship_num==ship_num && prox.consoles[console]==1) {
-						prox.enqueue_client_write_slow(artemis_packet::server_to_client::make_popup("this client is being kicked as requested by the GM"));
+						prox.enqueue_client_write(artemis_packet::server_to_client::make_popup("this client is being kicked as requested by the GM"));
 						// we don't wait for the client to receive the popup, via testing sending, flushing and immediately closing gives enough time for the client to display
 						prox.attempt_client_write();
 						// the throw will be caught within for_each_proxy, implicitly destroying the hermes_proxy
@@ -155,7 +155,7 @@ public:
 							if (lock == 1) {
 								uint32_t bit=1<<console_num;
 								if (console_bitfield&bit) {
-									prox.enqueue_client_write_slow(artemis_packet::server_to_client::make_popup(msg));
+									prox.enqueue_client_write(artemis_packet::server_to_client::make_popup(msg));
 									break;
 								}
 							}

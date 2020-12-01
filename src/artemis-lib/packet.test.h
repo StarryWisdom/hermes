@@ -1,15 +1,25 @@
 #include "gtest/gtest.h"
 #include "artemis-lib/packet.h"
+#include "core-lib/memory_buffer.h"
 
 //bleh buffer shouldnt really be defined here and these functions should be static :/
 class packet_tests {
 public:
-	void check_artemis_header(artemis_packet::direction dir) {
+	[[deprecated]] void check_artemis_header(artemis_packet::direction dir) {
 		EXPECT_EQ(buffer.read<uint32_t>(),0xdeadbeef);
 		EXPECT_EQ(buffer.read<uint32_t>(),buffer.write_offset);
 		EXPECT_EQ(buffer.read<uint32_t>(),static_cast<uint32_t>(dir));
 		EXPECT_EQ(buffer.read<uint32_t>(),0);
 		EXPECT_EQ(buffer.read<uint32_t>(),buffer.write_offset-20);
+	}
+
+	void check_artemis_header(const std::deque<std::byte>& buffer, artemis_packet::direction dir) {
+		EXPECT_GE(buffer.size(),20);
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,0),0xdeadbeef);
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,4),buffer.size());
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,8),static_cast<uint32_t>(dir));
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,12),0);
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,16),buffer.size()-20);
 	}
 
 	void check_value_int_header(artemis_packet::value_int subtype) {
@@ -25,7 +35,14 @@ public:
 		EXPECT_EQ(buffer.read<uint32_t>(),static_cast<uint32_t>(subtype));
 	}
 
-	void check_simple_event_header(artemis_packet::simple_event subtype) {
+	void check_simple_event_header(const std::deque<std::byte>& buffer, artemis_packet::simple_event subtype) {
+		EXPECT_GE(buffer.size(),28);
+		check_artemis_header(buffer,artemis_packet::direction::server_to_client);
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,20),artemis_packet::server_to_client::simple_event_jam32);
+		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,24),static_cast<uint32_t>(subtype));
+	}
+
+	[[deprecated]] void check_simple_event_header(artemis_packet::simple_event subtype) {
 		check_artemis_header(artemis_packet::direction::server_to_client);
 		EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::server_to_client::simple_event_jam32);
 		EXPECT_EQ(buffer.read<uint32_t>(),static_cast<uint32_t>(subtype));
