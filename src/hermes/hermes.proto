@@ -1,0 +1,40 @@
+syntax="proto2";
+
+package hermes_proto;
+
+message hermes_timing_bucket {
+	required uint32 max=1;
+	required uint32 number=2;
+}
+
+message hermes_stats {
+	repeated hermes_timing_bucket timing_with_sleep=1;
+	repeated hermes_timing_bucket timing_without_sleep=2;
+}
+
+message hermes_variant_data {
+	oneof value {
+		bool boolean=1;
+		uint32 u32=2;
+	}
+}
+
+message hermes_setting {
+	required string name=1;
+	required hermes_variant_data data=2;
+	required bool read_only=3;
+}
+
+message pc_data_v1 {
+	required float x=1;
+	required float y=2;
+	required float z=3;
+	required uint32 ship_num=4;
+}
+
+message hermes_server_msg {
+	optional hermes_stats stats=1;
+	optional string log=2;
+	repeated hermes_setting settings=3;
+	repeated pc_data_v1 pc_data=4;
+}

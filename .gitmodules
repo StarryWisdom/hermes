@@ -1,0 +1,18 @@
+[submodule "libs/networking-ts-impl/networking-ts-impl"]
+	path = libs/networking-ts-impl/networking-ts-impl
+	url = https://github.com/chriskohlhoff/networking-ts-impl.git
+[submodule "libs/imgui/imgui"]
+	path = libs/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "libs/sol2/sol2"]
+	path = libs/sol2/sol2
+	url = https://github.com/ThePhD/sol2.git
+[submodule "libs/sol2"]
+	path = libs/sol2
+	url = https://github.com/ThePhD/sol2.git
+[submodule "libs/imgui"]
+	path = libs/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "libs/networking-ts-impl"]
+	path = libs/networking-ts-impl
+	url = https://github.com/chriskohlhoff/networking-ts-impl.git

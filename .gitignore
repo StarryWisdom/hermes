@@ -1,0 +1,10 @@
+build.hermes.gcc/
+build.hermes.release.gcc/
+build.hermes.clang/
+imgui.ini
+.gdb_history
+hermes.gcc
+hermes.clang
+hermes.release.gcc
+lcov
+scanbuild

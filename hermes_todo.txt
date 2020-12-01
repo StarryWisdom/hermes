@@ -1,0 +1,22 @@
+get engineering data sync working
+	sending eng data before client start results in crash on select
+	test ship destruction
+	test sim resets
+	test server restarts (remeber 2 tiers of caching)
+	add gm info for how many eng data is being saved (as a paranoia check that we arent storing more than # of ships)
+	add something to clear eng data packets? maybe?
+
+some stats for total data useage from hermes (including added packets via hermes)
+fix gm log message if error in gm command
+logging (hermes.cpp, hermes_gm.h, hermes.h, hermes_proxy.h), logging RE debug message on TSN
+update cout to new logging
+threads are increasingly badly named - fix
+consider make "give this client gm" an extra gm function not idle text
+attempt_read in hermes_socket wants thinking about re partial reads - it looks wrong
+test with multiple servers
+	watcher with multiple server
+		configure startup watcher (currently only connectiong to ship 0's server)
+	check engineering data not synced cross server
+consider spliting hermes_thread.h
+log eng settings over time in gm client
+add reminder RE firewall
