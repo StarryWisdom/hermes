@@ -92,7 +92,7 @@ set(LETO_CORE_SRC
 
 	src/hermes/hermes.cpp
 	src/hermes/settings.cpp
-	src/hermes/gm/dearimgui_link.cpp
+	src/dearimgui_link.cpp
 	${HERMES_PROTO_SRC}
 	${HERMES_PROTO_HDR}
 )

@@ -7,7 +7,6 @@
 #include "hermes_proxy.h"
 #include "hermes_watcher.h"
 #include "hermes_gm_stats.h"
-#include "gm/hermes_gm_window.h"
 
 namespace net = std::experimental::net;
 

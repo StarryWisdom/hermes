@@ -2,7 +2,7 @@
 #include <thread>
 #include <iostream>
 #include "hermes/hermes.h"
-#include "hermes/gm/hermes_gm_window.h"
+#include "hermes/hermes_gm_window.h"
 
 uint16_t get_port_setting(const std::string& arg, const std::string& arg_name) {
 	const std::string port_str(arg.substr(arg_name.length()));
