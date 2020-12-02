@@ -125,13 +125,6 @@ public:
 		enqueue_client_write(tmp);
 	}
 
-	// sometimes its easier to have a vector - this is due to for example spliting artemis packets if they will go beyond max length
-	void enqueue_client_write(const std::vector<packet_buffer>& buffers) [[deprecated]] {
-		for (auto& i : buffers) {
-			enqueue_client_write(i);
-		}
-	}
-
 	void enqueue_client_write(const std::vector<std::deque<std::byte>>& buffers) {
 		for (const auto& i : buffers) {
 			enqueue_client_write(i);
