@@ -119,12 +119,6 @@ public:
 		}
 	}
 
-	//for enqueue_client_write really should take a std::deque<std::byte> but that is not praticial at this time
-	void enqueue_client_write(const packet_buffer& buffer) [[deprecated]] {
-		std::deque<std::byte> tmp{buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
-		enqueue_client_write(tmp);
-	}
-
 	void enqueue_client_write(const std::vector<std::deque<std::byte>>& buffers) {
 		for (const auto& i : buffers) {
 			enqueue_client_write(i);
@@ -337,7 +331,8 @@ public:
 							return; // should this be an exception?
 						}
 			} )) {
-				enqueue_client_write(from_server);
+				std::deque<std::byte> tmp_buffer{from_server.buffer.begin(),from_server.buffer.begin()+from_server.write_offset};
+				enqueue_client_write(tmp_buffer);
 				from_server=packet_buffer();
 			} else {
 				return;
