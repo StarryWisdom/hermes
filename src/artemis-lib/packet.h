@@ -240,27 +240,18 @@ public:
 			std::vector<packet_buffer> ret;
 			for (const auto& i : bitstreams) {
 				if (i.size()) {
-					packet_buffer packet{make_post_header_buffer()};
-					const std::vector<std::byte> tmp{i.begin(),i.end()};
+					// bleh copying this is bad
+					std::deque<std::byte> buffer=i;
+					buffer::push_back<uint32_t>(buffer,0);//termination quad
+					add_artemis_header(buffer, object_bit_stream_jam32);
+
+					packet_buffer packet;
+					const std::vector<std::byte> tmp{buffer.begin(),buffer.end()};
 					packet.copy_bytes((const void *)&(*tmp.begin()),tmp.size());
-					packet.write<uint32_t>(0);//termination quad
-					make_object_bitstream_header(packet);
 					ret.push_back(packet);
 				}
 			}
 			return ret;
-		}
-
-		static void make_object_bitstream_header(packet_buffer& buffer) {
-			auto size_offset=buffer.write_offset;
-			buffer.write_offset=0;
-			buffer.write<uint32_t>(0xdeadbeef);
-			buffer.write<uint32_t>(size_offset);
-			buffer.write<uint32_t>(static_cast<uint32_t>(direction::server_to_client));
-			buffer.write<uint32_t>(0);
-			buffer.write<uint32_t>(size_offset-20);
-			buffer.write<uint32_t>(object_bit_stream_jam32);
-			buffer.write_offset=size_offset;
 		}
 
 		static std::deque<std::byte> make_comm_text(uint16_t filter, std::string sender, std::string message) {
