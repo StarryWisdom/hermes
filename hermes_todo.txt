@@ -20,3 +20,5 @@ test with multiple servers
 consider spliting hermes_thread.h
 log eng settings over time in gm client
 add reminder RE firewall
+
+there is some sort of data savings for merging object_bitstreams - consider doing this

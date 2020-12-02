@@ -236,22 +236,13 @@ public:
 		//commsButton 0x02  Add
 		//commsButton 0x64  Remove all
 	public:
-		static std::vector<packet_buffer> make_object_bitstreams(const std::vector<std::deque<std::byte>>& bitstreams) {
-			std::vector<packet_buffer> ret;
-			for (const auto& i : bitstreams) {
-				if (i.size()) {
-					// bleh copying this is bad
-					std::deque<std::byte> buffer=i;
-					buffer::push_back<uint32_t>(buffer,0);//termination quad
-					add_artemis_header(buffer, object_bit_stream_jam32);
-
-					packet_buffer packet;
-					const std::vector<std::byte> tmp{buffer.begin(),buffer.end()};
-					packet.copy_bytes((const void *)&(*tmp.begin()),tmp.size());
-					ret.push_back(packet);
-				}
+		static std::vector<std::deque<std::byte>> finalize_object_bitstreams(std::vector<std::deque<std::byte>>&& bitstreams) {
+			bitstreams.erase(std::remove_if(bitstreams.begin(),bitstreams.end(),[](auto i) {return i.size()==0;}),bitstreams.end()); // this probably should be living elsewhere, along with merging bitstreams
+			for (auto& i : bitstreams) {
+				buffer::push_back<uint32_t>(i,0);//termination quad
+				add_artemis_header(i, object_bit_stream_jam32);
 			}
-			return ret;
+			return bitstreams;
 		}
 
 		static std::deque<std::byte> make_comm_text(uint16_t filter, std::string sender, std::string message) {

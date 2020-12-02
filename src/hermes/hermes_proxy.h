@@ -143,7 +143,7 @@ public:
 		enqueue_client_write_inner(buffer);
 	}
 
-	std::vector<packet_buffer> stationary_fixup() {
+	std::vector<std::deque<std::byte>> stationary_fixup() {
 		object_bitstream bitstream;
 		bool tractor_active{false};
 		cached_hermes.server_info.server_data.for_each_npc([&tractor_active](uint32_t, const npc& server_real) {
@@ -152,7 +152,7 @@ public:
 			}
 		});
 		if (!tractor_active) {
-			return artemis_packet::server_to_client::make_object_bitstreams(bitstream.get_bitstreams());// TODO - either switch this to return an empty vector, or document why it doesnt
+			return artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams());// TODO - either switch this to return an empty vector, or document why it doesnt
 		}
 		cached_hermes.server_info.server_data.for_each_pc([&bitstream](uint32_t id, const pc& server_real) {
 			if (server_real.hermes_velocity == 0) {
@@ -164,10 +164,10 @@ public:
 				bitstream.add_bitstream(bs.build_data());
 			}
 		});
-		return artemis_packet::server_to_client::make_object_bitstreams(bitstream.get_bitstreams());
+		return artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams());
 	}
 
-	std::vector<packet_buffer> data_fixup() {
+	std::vector<std::deque<std::byte>> data_fixup() {
 		object_bitstream bitstream;
 		cached_hermes.server_info.server_data.for_each_pc([&bitstream,this](uint32_t id, const pc& server_real){
 				const auto client{transmitted_to_client.get_eng_data(id)};
@@ -179,7 +179,7 @@ public:
 				const auto client{transmitted_to_client.get_npc_data(id)};
 				bitstream.add_bitstream(update_npc_data(id,server_real,client).build_data());
 			});
-		return artemis_packet::server_to_client::make_object_bitstreams(bitstream.get_bitstreams());
+		return artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams());
 	}
 
 	void server_tick(const uint32_t connection_id) {
@@ -231,7 +231,7 @@ public:
 				for (const auto& i : tmp_rm) {
 					hull_id_change_time.erase(i);
 				}
-				auto hull_fix{artemis_packet::server_to_client::make_object_bitstreams(bitstream.get_bitstreams())};
+				auto hull_fix{artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams())};
 				enqueue_client_write(hull_fix);
 				const auto send_fixes_timer{std::chrono::milliseconds(50)};
 				if (now-last_fixup_time>send_fixes_timer) {

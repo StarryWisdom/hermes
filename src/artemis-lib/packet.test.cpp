@@ -33,12 +33,12 @@ TEST_F (artemis_packet_test,make_load_tube) {
 TEST_F (artemis_packet_test,object_bitstream) {
 	std::deque<std::byte> tmp{std::byte{1}};
 	std::vector<std::deque<std::byte>> tmp2{tmp};
-	buffer=artemis_packet::server_to_client::make_object_bitstreams(tmp2).at(0);
-	EXPECT_EQ(buffer.buffer.size(),29u);
-	check_artemis_header(artemis_packet::direction::server_to_client);
-	EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::server_to_client::object_bit_stream_jam32);
-	EXPECT_EQ(buffer.read<uint8_t>(),1);
-	EXPECT_EQ(buffer.read<uint32_t>(),0);
+	auto buffer=artemis_packet::server_to_client::finalize_object_bitstreams(std::move(tmp2)).at(0);
+	EXPECT_EQ(buffer.size(),29u);
+	check_artemis_header(buffer,artemis_packet::direction::server_to_client);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,20),artemis_packet::server_to_client::object_bit_stream_jam32);
+	EXPECT_EQ(buffer::read_at<uint8_t>(buffer,24),1);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,25),0);
 }
 
 TEST_F (artemis_packet_test,make_post_header_buffer) {
