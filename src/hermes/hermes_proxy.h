@@ -277,9 +277,8 @@ public:
 		for (;;) {
 			auto packet=get_next_client_packet();
 			if (packet.has_value()) {
-				auto from_client=*packet;
 				std::deque<std::byte> d_packet{packet->buffer.begin(),packet->buffer.begin()+packet->write_offset};
-				parse_c2s_packet(&from_client);
+				parse_c2s_packet(d_packet);
 				if (d_packet.size() >= 24) {
 					//if we are a select ship message we will send a release gm console message to avoid an artemis bug
 					uint32_t type{buffer::read_at<uint32_t>(d_packet,20)};
@@ -296,7 +295,7 @@ public:
 					//inner gm text commands
 					} else if (type == artemis_packet::client_to_server::gm_text_jam32) {
 						try {
-							auto gm_text{artemis_packet::client_to_server::gm_text_hermes_temp(from_client)};
+							auto gm_text{artemis_packet::client_to_server::gm_text_hermes_temp(*packet)};
 							if (gm_text.temp_message.substr(0,1) == "/") {
 								packet.reset();
 								enqueue_client_write(hermes_cmd(gm_text.temp_message));
@@ -336,19 +335,16 @@ public:
 		}
 	}
 
-	void parse_c2s_packet(packet_buffer* buffer) {
-		buffer->read_offset=20;
-		const auto packet_id_opt=buffer->attempt_read<uint32_t>();
-		if (!packet_id_opt) {
+	void parse_c2s_packet(const std::deque<std::byte>& buffer) {
+		if (buffer.size()<24) {
 			return;
 		}
-		const auto packet_id=*packet_id_opt;
+		const auto packet_id{buffer::read_at<uint32_t>(buffer,20)};
 		if (packet_id==artemis_packet::client_to_server::value_int_jam32) {
-			const auto id_opt=buffer->attempt_read<uint32_t>();
-			if (!id_opt) {
+			if (buffer.size()<28) {
 				return;
 			}
-			const auto id=*id_opt;
+			const auto id{buffer::read_at<uint32_t>(buffer,24)};
 			if (id==static_cast<uint32_t>(artemis_packet::value_int::ready)) {
 				transmitted_to_client.clear_all_data();
 			}
