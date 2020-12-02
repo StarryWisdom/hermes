@@ -72,17 +72,19 @@ TEST_F (artemis_packet_test,make_climb_dive) {
 }
 
 TEST_F (artemis_packet_test,comm_text) {
-	buffer=artemis_packet::server_to_client::make_comm_text(10,"a","b");
+	const auto buffer{artemis_packet::server_to_client::make_comm_text(10,"a","b")};
 	EXPECT_EQ(artemis_packet::server_to_client::comm_text_jam32,0xd672c35f);
-	check_artemis_header(artemis_packet::direction::server_to_client);
-	EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::server_to_client::comm_text_jam32);
-	EXPECT_EQ(buffer.read<uint16_t>(),10);//filters
-	EXPECT_EQ(buffer.read<uint32_t>(),2u);
-	EXPECT_EQ(buffer.read<uint16_t>(),'a');
-	EXPECT_EQ(buffer.read<uint16_t>(),0u);
-	EXPECT_EQ(buffer.read<uint32_t>(),2u);
-	EXPECT_EQ(buffer.read<uint16_t>(),'b');
-	EXPECT_EQ(buffer.read<uint16_t>(),0u);
+	EXPECT_EQ(buffer.size(),42);
+
+	check_artemis_header(buffer,artemis_packet::direction::server_to_client);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,20),artemis_packet::server_to_client::comm_text_jam32);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,24),10);//filters
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,26),2u);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,30),'a');
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,32),0u);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,34),2u);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,38),'b');
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,40),0u);
 }
 
 TEST_F (artemis_packet_test,connected) {

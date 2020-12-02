@@ -137,7 +137,7 @@ public:
 			hermes->for_each_proxy(
 				[filters, from, msg]
 				(auto& prox, uint32_t) {
-					prox.enqueue_client_write_slow(artemis_packet::server_to_client::make_comm_text(filters,from,msg));
+					prox.enqueue_client_write(artemis_packet::server_to_client::make_comm_text(filters,from,msg));
 				}
 			);
 		}

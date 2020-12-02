@@ -268,12 +268,14 @@ public:
 			buffer.write_offset=size_offset;
 		}
 
-		static packet_buffer make_comm_text(uint16_t filter, std::string sender, std::string message) {
-			return make_buffer(comm_text_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint16_t>(filter);
-				buffer.write_artemis_string(sender);
-				buffer.write_artemis_string(message);
-			});
+		static std::deque<std::byte> make_comm_text(uint16_t filter, std::string sender, std::string message) {
+			std::deque<std::byte> buffer;
+			buffer::push_back<uint16_t>(buffer,filter);
+			buffer::write_artemis_string(buffer,sender);
+			buffer::write_artemis_string(buffer,message);
+
+			add_artemis_header(buffer,comm_text_jam32);
+			return buffer;
 		}
 
 		static packet_buffer make_connected(uint32_t unknown, float old_version, uint32_t major, uint32_t minor, uint32_t patch) {
