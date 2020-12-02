@@ -258,7 +258,9 @@ public:
 			}
 			std::copy(std::begin(i),std::end(i),std::back_inserter(tmp));
 		}
-		ret.push_back(tmp);
+		if (tmp.size()!=0) {
+			ret.push_back(tmp);
+		}
 		return ret;
 	}
 private:
