@@ -120,7 +120,7 @@ public:
 	}
 
 	//for enqueue_client_write really should take a std::deque<std::byte> but that is not praticial at this time
-	void enqueue_client_write(const packet_buffer& buffer) {
+	void enqueue_client_write(const packet_buffer& buffer) [[deprecated]] {
 		std::deque<std::byte> tmp{buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
 		enqueue_client_write(tmp);
 	}
@@ -253,10 +253,16 @@ public:
 			// it may be worth considering sending a inital connection state to clients
 			// we are suppressing it as it breaks the inital connection
 			suppress_next_ship_num_packet=true;
-			to_server.sock.enqueue_write(artemis_packet::client_to_server::make_set_ship_packet(ship_num));
+
+			const auto tmp=artemis_packet::client_to_server::make_set_ship_packet(ship_num);
+			std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
+
+			to_server.sock.enqueue_write(buffer);
 			for (auto i = 0; i != 11; i++) {
 				if (consoles[i]==1) {
-					to_server.sock.enqueue_write(artemis_packet::client_to_server::make_set_console(i,true));
+					const auto tmp=artemis_packet::client_to_server::make_set_console(i,true);
+					std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
+					to_server.sock.enqueue_write(buffer);
 				}
 			}
 			//finally we delete old packets sent from c2s as they may have changed selections of ships etc (and thus confuse users)
@@ -284,7 +290,10 @@ public:
 						if (from_client.write_offset >= 28) {
 							uint32_t subtype{from_client.read<uint32_t>()};
 							if (subtype==static_cast<uint32_t>(artemis_packet::value_int::set_ship)) {
-								to_server.sock.enqueue_write(artemis_packet::client_to_server::make_set_console(10,false));
+								const auto tmp=artemis_packet::client_to_server::make_set_console(10,false);
+								std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
+
+								to_server.sock.enqueue_write(buffer);
 							}
 						}
 					//inner gm text commands
@@ -306,8 +315,8 @@ public:
 					//what is wrong is there can be errors of would_block
 					//we are currently not handing them correctly
 					//this should be fixed
-					to_server.sock.enqueue_write(from_client);
-					from_client=packet_buffer();
+					std::deque<std::byte> tmp_buffer{from_client.buffer.begin(),from_client.buffer.begin()+from_client.write_offset};
+					to_server.sock.enqueue_write(tmp_buffer);
 				}
 			} else {
 				break;

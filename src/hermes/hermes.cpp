@@ -131,10 +131,11 @@ void hermes::main_loop() {
 
 				std::string tmp;
 				protobuf.SerializeToString(&tmp);
-				packet_buffer buffer;
-				buffer.write<uint32_t>(tmp.size());
-				buffer.copy_bytes(tmp.data(),tmp.size());
-				buffer.buffer.resize(buffer.write_offset);//we need to make sure that the we dont have spare capacity in the vector
+
+				std::deque<std::byte> buffer;
+				std::transform(tmp.begin(),tmp.end(),buffer.begin(),[] (char c) {return std::byte(c);});
+
+				buffer::push_front<uint32_t>(buffer,tmp.size());
 				i.client.enqueue_write(buffer);
 			}
 		}

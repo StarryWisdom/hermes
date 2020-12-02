@@ -3,7 +3,6 @@
 //todo consider moving this to core_lib
 
 #include <experimental/net>
-#include "artemis-lib/packet.h"
 
 namespace net = std::experimental::net;
 
@@ -47,14 +46,6 @@ public:
 		}
 	}
 
-	//um so packet_buffer is not really working as intended
-	//packet_buffer should probably change so buffer.write_offset==buffer.size()
-	//which would end with this code being dead code
-	//this wants deprecating at some point
-	void enqueue_write(const packet_buffer& buffer, const size_t max_queue = default_max_queue) {
-		std::vector<std::byte> tmp{buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
-		enqueue_write(tmp, max_queue);
-	}
 
 	size_t attempt_write_buffer() {
 		if (write_remaining.size()==0) {

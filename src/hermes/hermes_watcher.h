@@ -27,11 +27,17 @@ private:
 	static void set_ship_type(const std::string& name, const uint32_t ship_id, const float accent) {
 		const artemis_packet::ship_settings settings(false,ship_id,accent,name);
 
-		lua_to_server->sock.enqueue_write(artemis_packet::client_to_server::make_ship_settings(settings));
+		const auto tmp=artemis_packet::client_to_server::make_ship_settings(settings);
+		std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
+
+		lua_to_server->sock.enqueue_write(buffer);
 	}
 
 	static void set_ship_num(const uint8_t ship) {
-		lua_to_server->sock.enqueue_write(artemis_packet::client_to_server::make_set_ship_packet(ship));
+		const auto tmp=artemis_packet::client_to_server::make_set_ship_packet(ship);
+		std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
+
+		lua_to_server->sock.enqueue_write(buffer);
 	}
 public:
 	hermes_watcher(net::io_context& io_context)
