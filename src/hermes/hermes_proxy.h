@@ -275,14 +275,14 @@ public:
 			auto packet=get_next_client_packet();
 			if (packet.has_value()) {
 				auto from_client=*packet;
+				std::deque<std::byte> d_packet{packet->buffer.begin(),packet->buffer.begin()+packet->write_offset};
 				parse_c2s_packet(&from_client);
-				from_client.read_offset = 20;
-				if (from_client.write_offset >= 24) {
+				if (d_packet.size() >= 24) {
 					//if we are a select ship message we will send a release gm console message to avoid an artemis bug
-					uint32_t type{from_client.read<uint32_t>()};
+					uint32_t type{buffer::read_at<uint32_t>(d_packet,20)};
 					if (type == artemis_packet::client_to_server::value_int_jam32) {
-						if (from_client.write_offset >= 28) {
-							uint32_t subtype{from_client.read<uint32_t>()};
+						if (d_packet.size() >= 28) {
+							uint32_t subtype{buffer::read_at<uint32_t>(d_packet,24)};
 							if (subtype==static_cast<uint32_t>(artemis_packet::value_int::set_ship)) {
 								const auto tmp=artemis_packet::client_to_server::make_set_console(10,false);
 								std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
@@ -295,22 +295,15 @@ public:
 						try {
 							auto gm_text{artemis_packet::client_to_server::gm_text_hermes_temp(from_client)};
 							if (gm_text.temp_message.substr(0,1) == "/") {
-								from_client=packet_buffer();
+								packet.reset();
 								enqueue_client_write(hermes_cmd(gm_text.temp_message));
 							}
 						} catch (std::runtime_error&) {
 						}
 					}
 				}
-				if (from_client.write_offset!=0) {
-					//this is kind of wrong
-					//currently in the case of an error we clear and close the connection
-					//and in the case of no error we empty the buffer and continue
-					//what is wrong is there can be errors of would_block
-					//we are currently not handing them correctly
-					//this should be fixed
-					std::deque<std::byte> tmp_buffer{from_client.buffer.begin(),from_client.buffer.begin()+from_client.write_offset};
-					to_server.sock.enqueue_write(tmp_buffer);
+				if (packet.has_value()) {
+					to_server.sock.enqueue_write(d_packet);
 				}
 			} else {
 				break;
