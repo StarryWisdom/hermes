@@ -83,16 +83,17 @@ TEST_F (artemis_packet_test,connected) {
 }
 
 TEST_F (artemis_packet_test,idle_test) {
-	buffer=artemis_packet::server_to_client::make_idle_text_pb("a","b");
+	const auto buffer=artemis_packet::server_to_client::make_idle_text("a","b");
+	EXPECT_EQ(buffer.size(),40);
 	EXPECT_EQ(artemis_packet::server_to_client::idle_text_jam32,0xbe991309);
-	check_artemis_header(artemis_packet::direction::server_to_client);
-	EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::server_to_client::idle_text_jam32);
-	EXPECT_EQ(buffer.read<uint32_t>(),2u);
-	EXPECT_EQ(buffer.read<uint16_t>(),'a');
-	EXPECT_EQ(buffer.read<uint16_t>(),0u);
-	EXPECT_EQ(buffer.read<uint32_t>(),2u);
-	EXPECT_EQ(buffer.read<uint16_t>(),'b');
-	EXPECT_EQ(buffer.read<uint16_t>(),0u);
+	check_artemis_header(buffer,artemis_packet::direction::server_to_client);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,20),artemis_packet::server_to_client::idle_text_jam32);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,24),2u);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,28),'a');
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,30),0u);
+	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,32),2u);
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,36),'b');
+	EXPECT_EQ(buffer::read_at<uint16_t>(buffer,38),0u);
 }
 
 TEST_F (artemis_packet_test,object_delete) {

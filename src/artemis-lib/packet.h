@@ -281,29 +281,22 @@ public:
 		}
 
 		static std::deque<std::byte> make_idle_text(std::string from, std::string text) {
-			const auto buffer=make_idle_text_pb(from,text);
-			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
-		}
+			std::deque<std::byte> buffer;
+			buffer::write_artemis_string(buffer,from);
+			buffer::write_artemis_string(buffer,text);
 
-		static packet_buffer make_idle_text_pb(std::string from, std::string text) [[deprecated]] {
-			return make_buffer(idle_text_jam32,[=](packet_buffer& buffer) {
-				buffer.write_artemis_string(from);
-				buffer.write_artemis_string(text);
-			});
-		}
-
-		static packet_buffer make_client_consoles_pb(uint32_t ship, const std::array<uint8_t,11> consoles) [[deprecated]] {
-			return make_buffer(client_consoles_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(ship);
-				for (auto i : consoles) {
-					buffer.write<uint8_t>(i);
-				}
-			});
+			add_artemis_header(buffer,idle_text_jam32);
+			return buffer;
 		}
 
 		static std::deque<std::byte> make_client_consoles(uint32_t ship, const std::array<uint8_t,11> consoles) {
-			const auto buffer=make_client_consoles_pb(ship,consoles);
-			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
+			std::deque<std::byte> buffer;
+			buffer::push_back<uint32_t>(buffer,ship);
+			for (auto i : consoles) {
+				buffer::push_back<uint8_t>(buffer,i);
+			}
+			add_artemis_header(buffer,client_consoles_jam32);
+			return buffer;
 		}
 
 		static packet_buffer make_heartbeat() {

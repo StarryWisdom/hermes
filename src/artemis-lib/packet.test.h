@@ -22,13 +22,13 @@ public:
 		EXPECT_EQ(buffer::read_at<uint32_t>(buffer,16),buffer.size()-20);
 	}
 
-	void check_value_int_header(artemis_packet::value_int subtype) {
+	[[deprecated]] void check_value_int_header(artemis_packet::value_int subtype) {
 		check_artemis_header(artemis_packet::direction::client_to_server);
 		EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::client_to_server::value_int_jam32);
 		EXPECT_EQ(buffer.read<uint32_t>(),static_cast<uint32_t>(subtype));
 	}
 
-	void check_value_four_int_header(artemis_packet::value_four_ints subtype) {
+	[[deprecated]] void check_value_four_int_header(artemis_packet::value_four_ints subtype) {
 		EXPECT_EQ(0x69cc01d9,artemis_packet::client_to_server::value_four_ints_jam32);
 		check_artemis_header(artemis_packet::direction::client_to_server);
 		EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::client_to_server::value_four_ints_jam32);
