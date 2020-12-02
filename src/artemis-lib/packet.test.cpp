@@ -168,8 +168,8 @@ TEST_F (artemis_packet_test,incorrect_client_consoles) {
 }
 
 TEST_F (artemis_packet_test,client_consoles) {
-	buffer=artemis_packet::server_to_client::make_client_consoles(12,std::vector<uint8_t>{0,1,2,3,4,5,6,7,8,9,10});
-	check_client_console(12,0,1,2,3,4,5,6,7,8,9,10);
+	const auto buffer=artemis_packet::server_to_client::make_client_consoles(12,std::vector<uint8_t>{0,1,2,3,4,5,6,7,8,9,10});
+	check_client_console(buffer,12,0,1,2,3,4,5,6,7,8,9,10);
 }
 
 TEST_F (artemis_packet_test,plain_text_greeting) {

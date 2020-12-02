@@ -44,20 +44,20 @@ public:
 		mode=proxy_mode::multiplex;
 	}
 
-	packet_buffer hermes_cmd(std::string msg) {
+	std::vector<std::deque<std::byte>> hermes_cmd(const std::string& msg) {
+		std::vector<std::deque<std::byte>> ret;
 		if (msg=="/hermes giveMeGM") {
-			packet_buffer reply;
 			if (!cached_hermes.settings.disable_give_me_gm) {
-				reply={artemis_packet::server_to_client::make_idle_text_pb("hermes","gm granted")};
+				ret.push_back(artemis_packet::server_to_client::make_idle_text("hermes","gm granted"));
 				consoles[10]=1;
 			} else {
-				reply={artemis_packet::server_to_client::make_idle_text_pb("hermes","gm denied (hermes startup option)")};
+				ret.push_back(artemis_packet::server_to_client::make_idle_text("hermes","gm denied (hermes startup option)"));
 			}
-			reply.write<packet_buffer>(artemis_packet::server_to_client::make_client_consoles(ship_num,consoles));
-			return reply;
+			ret.push_back(artemis_packet::server_to_client::make_client_consoles(ship_num,consoles));
 		} else {
-			return artemis_packet::server_to_client::make_idle_text_pb("hermes","unknown command");
+			ret.push_back(artemis_packet::server_to_client::make_idle_text("hermes","unknown command"));
 		}
+		return ret;
 	}
 
 private:
@@ -126,8 +126,14 @@ public:
 	}
 
 	// sometimes its easier to have a vector - this is due to for example spliting artemis packets if they will go beyond max length
-	void enqueue_client_write(std::vector<packet_buffer>& buffers) {
+	void enqueue_client_write(std::vector<packet_buffer>& buffers) [[deprecated]] {
 		for (auto& i : buffers) {
+			enqueue_client_write(i);
+		}
+	}
+
+	void enqueue_client_write(const std::vector<std::deque<std::byte>>& buffers) {
+		for (const auto& i : buffers) {
 			enqueue_client_write(i);
 		}
 	}
@@ -296,8 +302,7 @@ public:
 							auto gm_text{artemis_packet::client_to_server::gm_text_hermes_temp(from_client)};
 							if (gm_text.temp_message.substr(0,1) == "/") {
 								from_client=packet_buffer();
-								packet_buffer reply=hermes_cmd(gm_text.temp_message);
-								enqueue_client_write(reply);
+								enqueue_client_write(hermes_cmd(gm_text.temp_message));
 							}
 						} catch (std::runtime_error&) {
 						}

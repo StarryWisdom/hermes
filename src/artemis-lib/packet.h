@@ -308,14 +308,14 @@ public:
 			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
 		}
 
-		static packet_buffer [[deprecated]] make_idle_text_pb(std::string from, std::string text) {
+		static packet_buffer make_idle_text_pb(std::string from, std::string text) [[deprecated]] {
 			return make_buffer(idle_text_jam32,[=](packet_buffer& buffer) {
 				buffer.write_artemis_string(from);
 				buffer.write_artemis_string(text);
 			});
 		}
 
-		static packet_buffer make_client_consoles(uint32_t ship, const std::vector<uint8_t> consoles) {
+		static packet_buffer make_client_consoles_pb(uint32_t ship, const std::vector<uint8_t> consoles) [[deprecated]] {
 			if (consoles.size()!=11) {
 				throw std::runtime_error("incorrect use of make_client_consoles");
 			}
@@ -325,6 +325,11 @@ public:
 					buffer.write<uint8_t>(i);
 				}
 			});
+		}
+
+		static std::deque<std::byte> make_client_consoles(uint32_t ship, const std::vector<uint8_t> consoles) {
+			const auto buffer=make_client_consoles_pb(ship,consoles);
+			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
 		}
 
 		static packet_buffer make_heartbeat() {
