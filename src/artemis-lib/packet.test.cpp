@@ -42,11 +42,6 @@ TEST_F (artemis_packet_test,make_object_bitstream_header) {
 	EXPECT_EQ(buffer.read<uint32_t>(),99);
 }
 
-TEST_F (artemis_packet_test,object_bitstream_empty) {
-	std::vector<std::deque<std::byte>> tmp;
-	EXPECT_EQ(artemis_packet::server_to_client::make_object_bitstreams(tmp).at(0).buffer.size(),0);
-}
-
 TEST_F (artemis_packet_test,object_bitstream) {
 	std::deque<std::byte> tmp{std::byte{1}};
 	std::vector<std::deque<std::byte>> tmp2{tmp};

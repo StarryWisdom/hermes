@@ -248,11 +248,6 @@ public:
 					ret.push_back(packet);
 				}
 			}
-			//this will if given a empty std::deque<std::byte> give a empty packet buffer
-			//this debatably is a bug, but all calling code would need to be checked to update
-			if (!ret.size()) {
-				ret.push_back(packet_buffer());
-			}
 			return ret;
 		}
 

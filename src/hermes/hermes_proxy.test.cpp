@@ -19,13 +19,13 @@ TEST_F (hermes_proxy_test,fixup_single_change) {
 	info.server_data.pc_data.emplace(id,pc());
 	{
 		//flush through the changes
-		auto tmp1=proxy.data_fixup().at(0);
+		auto tmp1=proxy.data_fixup();
 		proxy.enqueue_client_write(tmp1);
-		EXPECT_NE(tmp1.write_offset,0);
-		auto tmp2=proxy.data_fixup().at(0);
-		EXPECT_EQ(tmp2.write_offset,0);
+		EXPECT_NE(tmp1.size(),0);
+		auto tmp2=proxy.data_fixup();
+		EXPECT_EQ(tmp2.size(),0);
 	}
-	EXPECT_EQ(proxy.data_fixup().at(0).write_offset,0);
+	EXPECT_EQ(proxy.data_fixup().size(),0);
 	info.server_data.pc_data.at(id).coolant[0]=254;
 	auto buf=proxy.data_fixup().at(0);
 	buf.read_offset=24;//ignore header
@@ -53,11 +53,11 @@ TEST_F (hermes_proxy_test,fixup_multiple_change) {
 		//flush through the changes
 		auto tmp1=proxy.data_fixup();
 		proxy.enqueue_client_write(tmp1);
-		EXPECT_NE(tmp1.at(0).write_offset,0);
+		EXPECT_NE(tmp1.size(),0);
 		auto tmp2=proxy.data_fixup();
-		EXPECT_EQ(tmp2.at(0).write_offset,0);
+		EXPECT_EQ(tmp2.size(),0);
 	}
-	EXPECT_EQ(proxy.data_fixup().at(0).write_offset,0);
+	EXPECT_EQ(proxy.data_fixup().size(),0);
 	info.server_data.pc_data.at(id1).coolant[0]=254;
 	info.server_data.pc_data.at(id2).coolant[1]=253;
 	auto buf=proxy.data_fixup().at(0);
@@ -116,11 +116,11 @@ TEST_F (hermes_proxy_test,parse_data_change) {
 
 	info.server_data.pc_data.at(10).coolant[0]=11;
 	auto tmp2=proxy.data_fixup();
-	EXPECT_NE(tmp2.at(0).write_offset,0);
+	EXPECT_NE(tmp2.size(),0);
 	proxy.enqueue_client_write(tmp2);
 
 	auto tmp3=proxy.data_fixup();
-	EXPECT_EQ(tmp3.at(0).write_offset,0);
+	EXPECT_EQ(tmp3.size(),0);
 }
 
 TEST_F (hermes_proxy_test,inital_data_sync) {
