@@ -15,7 +15,7 @@ namespace net = std::experimental::net;
 class hermes_proxy {
 public:
 	uint8_t ship_num{0};
-	std::vector<uint8_t> consoles{0,0,0,0,0,0,0,0,0,0,0};//this probably should be a std::array
+	std::array<uint8_t,11> consoles{0,0,0,0,0,0,0,0,0,0,0};
 private:
 	std::chrono::time_point<std::chrono::system_clock> last_fixup_time{std::chrono::system_clock::now()};
 	std::unordered_map<uint32_t,std::chrono::time_point<std::chrono::system_clock>> hull_id_change_time;

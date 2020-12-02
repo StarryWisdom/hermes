@@ -146,12 +146,8 @@ TEST_F (artemis_packet_test,game_start) {
 	EXPECT_EQ(buffer.read<uint32_t>(),11u);
 }
 
-TEST_F (artemis_packet_test,incorrect_client_consoles) {
-	EXPECT_THROW(artemis_packet::server_to_client::make_client_consoles(0,std::vector<uint8_t>()),std::runtime_error);
-}
-
 TEST_F (artemis_packet_test,client_consoles) {
-	const auto buffer=artemis_packet::server_to_client::make_client_consoles(12,std::vector<uint8_t>{0,1,2,3,4,5,6,7,8,9,10});
+	const auto buffer=artemis_packet::server_to_client::make_client_consoles(12,std::array<uint8_t,11>{0,1,2,3,4,5,6,7,8,9,10});
 	check_client_console(buffer,12,0,1,2,3,4,5,6,7,8,9,10);
 }
 

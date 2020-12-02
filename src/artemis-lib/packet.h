@@ -292,10 +292,7 @@ public:
 			});
 		}
 
-		static packet_buffer make_client_consoles_pb(uint32_t ship, const std::vector<uint8_t> consoles) [[deprecated]] {
-			if (consoles.size()!=11) {
-				throw std::runtime_error("incorrect use of make_client_consoles");
-			}
+		static packet_buffer make_client_consoles_pb(uint32_t ship, const std::array<uint8_t,11> consoles) [[deprecated]] {
 			return make_buffer(client_consoles_jam32,[=](packet_buffer& buffer) {
 				buffer.write<uint32_t>(ship);
 				for (auto i : consoles) {
@@ -304,7 +301,7 @@ public:
 			});
 		}
 
-		static std::deque<std::byte> make_client_consoles(uint32_t ship, const std::vector<uint8_t> consoles) {
+		static std::deque<std::byte> make_client_consoles(uint32_t ship, const std::array<uint8_t,11> consoles) {
 			const auto buffer=make_client_consoles_pb(ship,consoles);
 			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
 		}
