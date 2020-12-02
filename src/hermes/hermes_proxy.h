@@ -120,13 +120,13 @@ public:
 	}
 
 	//for enqueue_client_write really should take a std::deque<std::byte> but that is not praticial at this time
-	void enqueue_client_write(packet_buffer& buffer) {
+	void enqueue_client_write(const packet_buffer& buffer) {
 		std::deque<std::byte> tmp{buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
 		enqueue_client_write(tmp);
 	}
 
 	// sometimes its easier to have a vector - this is due to for example spliting artemis packets if they will go beyond max length
-	void enqueue_client_write(std::vector<packet_buffer>& buffers) [[deprecated]] {
+	void enqueue_client_write(const std::vector<packet_buffer>& buffers) [[deprecated]] {
 		for (auto& i : buffers) {
 			enqueue_client_write(i);
 		}
@@ -236,10 +236,8 @@ public:
 				const auto send_fixes_timer{std::chrono::milliseconds(50)};
 				if (now-last_fixup_time>send_fixes_timer) {
 					last_fixup_time=now;
-					auto fix{data_fixup()};
-					enqueue_client_write(fix);
-					auto stationary_fix{stationary_fixup()};
-					enqueue_client_write(stationary_fix);
+					enqueue_client_write(data_fixup());
+					enqueue_client_write(stationary_fixup());
 				}
 			}
 		}
