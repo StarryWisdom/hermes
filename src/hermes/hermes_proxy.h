@@ -138,19 +138,22 @@ public:
 				tractor_active=true;
 			}
 		});
+		// if there are no tractor beams active we wont send the packets keeping ships idle
+		// this is due to the delay when impulse and/or warp is enabled for the first time
+		// tractor beams are rare enough the extra jitter for other ships when a unrelated ship
+		// starting to move isnt a problem
 		if (!tractor_active) {
-			return artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams());// TODO - either switch this to return an empty vector, or document why it doesnt
+			cached_hermes.server_info.server_data.for_each_pc([&bitstream](uint32_t id, const pc& server_real) {
+				if (server_real.hermes_velocity == 0) {
+					update_player_data bs;
+					bs.id = id;
+					bs.x = server_real.hermes_x;
+					bs.y = server_real.hermes_y;
+					bs.z = server_real.hermes_z;
+					bitstream.add_bitstream(bs.build_data());
+				}
+			});
 		}
-		cached_hermes.server_info.server_data.for_each_pc([&bitstream](uint32_t id, const pc& server_real) {
-			if (server_real.hermes_velocity == 0) {
-				update_player_data bs;
-				bs.id = id;
-				bs.x = server_real.hermes_x;
-				bs.y = server_real.hermes_y;
-				bs.z = server_real.hermes_z;
-				bitstream.add_bitstream(bs.build_data());
-			}
-		});
 		return artemis_packet::server_to_client::finalize_object_bitstreams(bitstream.get_bitstreams());
 	}
 
