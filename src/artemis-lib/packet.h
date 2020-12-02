@@ -303,7 +303,12 @@ public:
 			});
 		}
 
-		static packet_buffer make_idle_text(std::string from, std::string text) {
+		static std::deque<std::byte> make_idle_text(std::string from, std::string text) {
+			const auto buffer=make_idle_text_pb(from,text);
+			return std::deque<std::byte> {buffer.buffer.begin(),buffer.buffer.begin()+buffer.write_offset};
+		}
+
+		static packet_buffer [[deprecated]] make_idle_text_pb(std::string from, std::string text) {
 			return make_buffer(idle_text_jam32,[=](packet_buffer& buffer) {
 				buffer.write_artemis_string(from);
 				buffer.write_artemis_string(text);

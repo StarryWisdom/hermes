@@ -125,7 +125,7 @@ public:
 				[from,text]
 				(auto& prox, uint32_t)
 				{
-					prox.enqueue_client_write_slow(artemis_packet::server_to_client::make_idle_text(from,text));
+					prox.enqueue_client_write(artemis_packet::server_to_client::make_idle_text(from,text));
 				}
 			);
 		}

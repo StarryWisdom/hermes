@@ -48,15 +48,15 @@ public:
 		if (msg=="/hermes giveMeGM") {
 			packet_buffer reply;
 			if (!cached_hermes.settings.disable_give_me_gm) {
-				reply={artemis_packet::server_to_client::make_idle_text("hermes","gm granted")};
+				reply={artemis_packet::server_to_client::make_idle_text_pb("hermes","gm granted")};
 				consoles[10]=1;
 			} else {
-				reply={artemis_packet::server_to_client::make_idle_text("hermes","gm denied (hermes startup option)")};
+				reply={artemis_packet::server_to_client::make_idle_text_pb("hermes","gm denied (hermes startup option)")};
 			}
 			reply.write<packet_buffer>(artemis_packet::server_to_client::make_client_consoles(ship_num,consoles));
 			return reply;
 		} else {
-			return artemis_packet::server_to_client::make_idle_text("hermes","unknown command");
+			return artemis_packet::server_to_client::make_idle_text_pb("hermes","unknown command");
 		}
 	}
 
@@ -130,11 +130,6 @@ public:
 		for (auto& i : buffers) {
 			enqueue_client_write(i);
 		}
-	}
-
-	//enqueue_client_writes really should be reworked be const, then it can be a reference instead
-	[[deprecated]] void enqueue_client_write_slow(packet_buffer buffer) {
-		enqueue_client_write(buffer);
 	}
 
 	void enqueue_client_write(const std::deque<std::byte>& buffer) {

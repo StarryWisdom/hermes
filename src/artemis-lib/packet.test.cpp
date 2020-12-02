@@ -100,7 +100,7 @@ TEST_F (artemis_packet_test,connected) {
 }
 
 TEST_F (artemis_packet_test,idle_test) {
-	buffer=artemis_packet::server_to_client::make_idle_text("a","b");
+	buffer=artemis_packet::server_to_client::make_idle_text_pb("a","b");
 	EXPECT_EQ(artemis_packet::server_to_client::idle_text_jam32,0xbe991309);
 	check_artemis_header(artemis_packet::direction::server_to_client);
 	EXPECT_EQ(buffer.read<uint32_t>(),artemis_packet::server_to_client::idle_text_jam32);
