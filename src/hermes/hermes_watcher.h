@@ -68,17 +68,7 @@ public:
 				has_start_run=true;
 			}
 			for (;;) {
-				if (artemis_packet::fetch_artemis_packet(from_server,
-					[this](uint32_t read_len) {
-					from_server.realloc_if_needed(read_len);
-					std::error_code err;
-					from_server.write_offset += to_server.sock.socket.read_some(std::experimental::net::buffer(from_server.buffer.data() + from_server.write_offset, read_len), err);
-					if (!!err&&err != std::experimental::net::error::would_block) {
-						throw std::runtime_error(u8"watcher - server read fail err message = "+err.message());
-					}
-				})) {
-					from_server=packet_buffer();
-				} else {
+				if (!to_server.sock.get_next_artemis_packet().has_value()) {
 					break;
 				}
 			}
@@ -88,5 +78,4 @@ public:
 
 private:
 	bool has_start_run{false};
-	packet_buffer from_server;
 };

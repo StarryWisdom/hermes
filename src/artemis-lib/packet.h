@@ -110,56 +110,6 @@ public:
 		game_over=0x1e,
 	};
 
-	static bool valid_header(const packet_buffer& packet) {
-		if (packet.write_offset>0) {
-			if (packet.buffer[0] != std::byte(0xef)) {
-				return false;
-			}
-			if (packet.write_offset>1) {
-				if (packet.buffer[1] != std::byte(0xbe)) {
-					return false;
-				}
-				if (packet.write_offset>2) {
-					if (packet.buffer[2] != std::byte(0xad)) {
-						return false;
-					}
-					if (packet.write_offset>3) {
-						if (packet.buffer[3] != std::byte(0xde)) {
-							return false;
-						}
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	//return is if we have read a whole packet
-	//more_bytes called with number of bytes the need to be read to packet
-	template<typename more_bytes_func>
-	static bool fetch_artemis_packet(packet_buffer& packet, more_bytes_func more_bytes) {
-		if (!valid_header(packet)) {
-			throw std::runtime_error("fetch_artemis_packet sent a invalid start of a packet");
-		}
-		//artemis packets have a 20 byte pre header including the lenght of the packet - this is the first thing to be read
-		if (packet.write_offset<=20) {
-			more_bytes(20-packet.write_offset);
-		}
-		if (packet.write_offset>=20) {
-			if (!valid_header(packet)) {
-				throw std::runtime_error("fetch_artemis_packet has read an invalid packet");
-			}
-			packet.read_offset=4;//lenght
-			uint32_t length=packet.read<uint32_t>();
-			more_bytes(length-packet.write_offset);
-			if (length==packet.write_offset) {
-				packet.read_offset=0;
-				return true;
-			}
-		}
-		return false;
-	}
-
 	class ship_settings {
 	public:
 		bool jump{false};

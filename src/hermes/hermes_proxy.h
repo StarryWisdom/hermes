@@ -5,7 +5,6 @@
 #include <optional>
 #include <deque>
 
-#include "artemis-lib/packet.h"
 #include "artemis-lib/bitstream.h"
 #include "hermes.h"
 #include "hermes_thread.h"
@@ -19,7 +18,6 @@ public:
 private:
 	std::chrono::time_point<std::chrono::system_clock> last_fixup_time{std::chrono::system_clock::now()};
 	std::unordered_map<uint32_t,std::chrono::time_point<std::chrono::system_clock>> hull_id_change_time;
-	packet_buffer from_server;//pending input from server
 	enum class proxy_mode {
 		single = 0,
 		multiplex = 1,
@@ -75,26 +73,12 @@ private:
 	// as soon as we connect to ship1 (and thus switch to server1)
 	// the server will say "hello you are on ship0" which will result in hermes disconnecting and reconnecting
 
-	packet_buffer incomplete_from_client;
 	std::optional<std::deque<std::byte>> get_next_client_packet() {
 		if (mode==proxy_mode::single) {
 			if (!to_client.has_value()) {
 				throw std::runtime_error("somehow client socket is not set, this shoudnt be possible");
 			}
-			if (artemis_packet::fetch_artemis_packet(incomplete_from_client,
-				[this](uint32_t read_len) {
-				incomplete_from_client.realloc_if_needed(read_len);
-				std::error_code err;
-				incomplete_from_client.write_offset += to_client->socket.read_some(std::experimental::net::buffer(incomplete_from_client.buffer.data() + incomplete_from_client.write_offset, read_len), err);
-				if (!!err&&err != std::experimental::net::error::would_block) {
-					throw std::runtime_error("client read fail");
-				}
-			})) {
-				std::deque<std::byte> ret{incomplete_from_client.buffer.begin(),incomplete_from_client.buffer.begin()+incomplete_from_client.write_offset};
-				incomplete_from_client=packet_buffer();
-				return ret;
-			}
-			return std::optional<std::deque<std::byte>>();
+			return to_client->get_next_artemis_packet();
 		} else {
 			throw std::runtime_error("TODO");
 		}
@@ -270,7 +254,6 @@ public:
 					break;
 				}
 			}
-			from_server=packet_buffer();//clear contents from the last connection (should this somehow be moved to a constructor somewhere?)
 			first_connect_run=true;
 		}
 	}
@@ -317,20 +300,9 @@ public:
 
 	void server_to_client() {
 		for (;;) {
-			if (artemis_packet::fetch_artemis_packet(from_server,
-					[this](uint32_t read_len) {
-						from_server.realloc_if_needed(read_len);
-						std::error_code err;
-						from_server.write_offset += to_server.sock.socket.read_some(std::experimental::net::buffer(from_server.buffer.data() + from_server.write_offset, read_len), err);
-						if (!!err&&err != std::experimental::net::error::would_block) {
-							std::cout << "proxy to server read fail\n";
-							to_server.connected = false;
-							return; // should this be an exception?
-						}
-			} )) {
-				std::deque<std::byte> tmp_buffer{from_server.buffer.begin(),from_server.buffer.begin()+from_server.write_offset};
-				enqueue_client_write(tmp_buffer);
-				from_server=packet_buffer();
+			const auto packet=to_server.sock.get_next_artemis_packet();
+			if (packet.has_value()) {
+				enqueue_client_write(*packet);
 			} else {
 				return;
 			}

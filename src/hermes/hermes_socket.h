@@ -59,7 +59,48 @@ public:
 	}
 
 	std::optional<std::vector<std::byte>> attempt_read(const size_t read_len) {
+		fill_read_buffer(read_len);
+		if (read_bytes.size()!=read_len) {
+			return std::optional<std::vector<std::byte>>();
+		} else {
+			std::optional<std::vector<std::byte>> ret=read_bytes;
+			read_bytes.clear();
+			return ret;
+		}
+	}
+
+	// I think this may be sutiable for swtiching to co-routines,
+	// also there is a distinct lack of testing code which really should be fixed
+	std::optional<std::deque<std::byte>> get_next_artemis_packet() {
+		auto ret{std::optional<std::deque<std::byte>>()};
+		const auto length_sub20{get_uint32_at(16)}; // this will force a read, thus it wants to be first to avoid multiple reads if not needed
+		const auto length{get_uint32_at(4)};
+		const auto header{get_uint32_at(0)};
+		if (header.has_value() && length.has_value() && length_sub20.has_value()) {
+			if (*header!=0xdeadbeef || *length_sub20+20!=*length) {
+				throw std::runtime_error("error in artemis packet");
+			}
+			const auto read{attempt_read(*length)};
+			if (read.has_value()) {
+				ret=std::deque<std::byte>{read->begin(),read->end()};
+			}
+		}
+		return ret;
+	}
+
+	size_t pending_write_bytes() {
+		return write_remaining.size();
+	}
+
+	std::vector<std::byte> write_remaining;
+	std::vector<std::byte> read_bytes;
+private:
+	void fill_read_buffer(const size_t read_len) {
 		if (read_len<read_bytes.size()) {
+			// this needs much better testing if we are going to rely on not dropping data
+			// as such we are just going to abort if this is called
+			// this can and should be fixed
+			// throwing here makes it possible to fix with only a tiny chance of breakage elsewhere
 			throw std::runtime_error("network queue error on read");
 		}
 		const size_t remaining_len=read_len-read_bytes.size();
@@ -72,18 +113,19 @@ public:
 		}
 		if (current_len!=read_len) {
 			read_bytes.resize(current_len);
-			return std::optional<std::vector<std::byte>>();
-		} else {
-			std::optional<std::vector<std::byte>> ret=read_bytes;
-			read_bytes.clear();
-			return ret;
 		}
 	}
 
-	size_t pending_write_bytes() {
-		return write_remaining.size();
+	std::optional<uint32_t> get_uint32_at(const size_t offset) {
+		if (read_bytes.size()<offset+4) {
+			fill_read_buffer(offset+4);
+		}
+		if (read_bytes.size()<offset+4) {
+			return std::optional<uint32_t>();
+		} else {
+			uint32_t val;
+			val=*((uint32_t*)(&read_bytes.at(offset)));
+			return val;
+		}
 	}
-
-	std::vector<std::byte> write_remaining;
-	std::vector<std::byte> read_bytes;
 };

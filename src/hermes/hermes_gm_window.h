@@ -15,8 +15,6 @@
 
 #include "hermes.pb.h"
 
-#include "core-lib/packet_buffer.h"
-
 #include "hermes/hermes_gm_stats.h"
 #include "hermes/hermes_socket.h"
 #include "hermes/settings.h"
