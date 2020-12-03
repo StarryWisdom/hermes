@@ -43,7 +43,9 @@ public:
 	{
 		mode=proxy_mode::multiplex;
 	}
-
+/* hermes_cmd really should be replaced via the gm client
+ * this is annoyingly hard to update and also annoyingly hard to test
+ * commenting until it can be reimplemented
 	std::vector<std::deque<std::byte>> hermes_cmd(const std::string& msg) {
 		std::vector<std::deque<std::byte>> ret;
 		if (msg=="/hermes giveMeGM") {
@@ -58,7 +60,7 @@ public:
 			ret.push_back(artemis_packet::server_to_client::make_idle_text("hermes","unknown command"));
 		}
 		return ret;
-	}
+	}*/
 
 private:
 	artemis_sent_data transmitted_to_client;
@@ -293,6 +295,7 @@ public:
 							}
 						}
 					//inner gm text commands
+					/*
 					} else if (type == artemis_packet::client_to_server::gm_text_jam32) {
 						try {
 							auto gm_text{artemis_packet::client_to_server::gm_text_hermes_temp(*packet)};
@@ -301,7 +304,7 @@ public:
 								enqueue_client_write(hermes_cmd(gm_text.temp_message));
 							}
 						} catch (std::runtime_error&) {
-						}
+						}*/
 					}
 				}
 				if (packet.has_value()) {

@@ -433,6 +433,7 @@ public:
 		// this has been moved here from hermes
 		// this probably wants to be fixed up at some point
 		// gm_text_hermes_temp needs renaming when fixed
+		/*
 		class gm_text_hermes_temp {
 		public:
 			gm_text_hermes_temp(packet_buffer& buffer) {
@@ -490,7 +491,7 @@ public:
 			std::string temp_message;
 			uint16_t fliter;
 		};
-
+*/
 		inline static const uint32_t value_int_jam32{jam32::value("valueInt")};
 		inline static const uint32_t value_four_ints_jam32{jam32::value("valueFourInts")};
 		inline static const uint32_t comms_message_jam32{jam32::value("commsMessage")};
