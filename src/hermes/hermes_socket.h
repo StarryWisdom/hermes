@@ -26,17 +26,9 @@ public:
 	constexpr static size_t default_max_queue=1024*1024*10;
 
 	void enqueue_write(const std::string& str, const size_t max_queue=default_max_queue) {
-		std::vector<std::byte> tmp(str.size());
+		std::deque<std::byte> tmp(str.size());
 		std::transform(str.begin(),str.end(),tmp.begin(),[] (char c) {return std::byte(c);});
 		enqueue_write(tmp,max_queue);
-	}
-
-	//this probably wants deprecating at some point
-	void enqueue_write(const std::vector<std::byte>& buffer, const size_t max_queue=default_max_queue) {
-		write_remaining.insert(std::end(write_remaining), std::begin(buffer), std::end(buffer));
-		if (write_remaining.size()>=max_queue) {
-			throw std::runtime_error("network queue overflow");
-		}
 	}
 
 	void enqueue_write(const std::deque<std::byte>& buffer, const size_t max_queue=default_max_queue) {
