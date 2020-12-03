@@ -76,7 +76,7 @@ private:
 	// the server will say "hello you are on ship0" which will result in hermes disconnecting and reconnecting
 
 	packet_buffer incomplete_from_client;
-	std::optional<packet_buffer> get_next_client_packet() {
+	std::optional<std::deque<std::byte>> get_next_client_packet() {
 		if (mode==proxy_mode::single) {
 			if (!to_client.has_value()) {
 				throw std::runtime_error("somehow client socket is not set, this shoudnt be possible");
@@ -90,11 +90,11 @@ private:
 					throw std::runtime_error("client read fail");
 				}
 			})) {
-				packet_buffer ret=incomplete_from_client;
+				std::deque<std::byte> ret{incomplete_from_client.buffer.begin(),incomplete_from_client.buffer.begin()+incomplete_from_client.write_offset};
 				incomplete_from_client=packet_buffer();
 				return ret;
 			}
-			return std::optional<packet_buffer>();
+			return std::optional<std::deque<std::byte>>();
 		} else {
 			throw std::runtime_error("TODO");
 		}
@@ -279,14 +279,13 @@ public:
 		for (;;) {
 			auto packet=get_next_client_packet();
 			if (packet.has_value()) {
-				std::deque<std::byte> d_packet{packet->buffer.begin(),packet->buffer.begin()+packet->write_offset};
-				parse_c2s_packet(d_packet);
-				if (d_packet.size() >= 24) {
+				parse_c2s_packet(*packet);
+				if (packet->size() >= 24) {
 					//if we are a select ship message we will send a release gm console message to avoid an artemis bug
-					uint32_t type{buffer::read_at<uint32_t>(d_packet,20)};
+					uint32_t type{buffer::read_at<uint32_t>(*packet,20)};
 					if (type == artemis_packet::client_to_server::value_int_jam32) {
-						if (d_packet.size() >= 28) {
-							uint32_t subtype{buffer::read_at<uint32_t>(d_packet,24)};
+						if (packet->size() >= 28) {
+							uint32_t subtype{buffer::read_at<uint32_t>(*packet,24)};
 							if (subtype==static_cast<uint32_t>(artemis_packet::value_int::set_ship)) {
 								const auto tmp=artemis_packet::client_to_server::make_set_console(10,false);
 								std::deque<std::byte> buffer{tmp.buffer.begin(),tmp.buffer.begin()+tmp.write_offset};
@@ -308,7 +307,7 @@ public:
 					}
 				}
 				if (packet.has_value()) {
-					to_server.sock.enqueue_write(d_packet);
+					to_server.sock.enqueue_write(*packet);
 				}
 			} else {
 				break;
