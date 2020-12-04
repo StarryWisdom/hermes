@@ -17,7 +17,7 @@ public:
 	{
 	}
 
-	queued_nonblocking_socket(net::ip::tcp::socket sock)
+	queued_nonblocking_socket(net::ip::tcp::socket&& sock)
 		: socket(std::move(sock))
 	{
 		socket.non_blocking(true);
@@ -37,7 +37,6 @@ public:
 			throw std::runtime_error("network queue overflow");
 		}
 	}
-
 
 	size_t attempt_write_buffer() {
 		if (write_remaining.size()==0) {

@@ -14,6 +14,7 @@
 
 #include "settings.h"
 #include "artemis_server_info.h"
+#include "client_socket.h"
 
 namespace net = std::experimental::net;
 
@@ -64,7 +65,7 @@ public:
 	template <typename fn> void for_each_proxy(fn func);
 
 	net::io_context context;
-	void add_proxy(class hermes_proxy&&);
+	void add_proxy(std::unique_ptr<client_socket>&& soc);
 private:
 	class impl;
 	std::unique_ptr<impl> _impl;

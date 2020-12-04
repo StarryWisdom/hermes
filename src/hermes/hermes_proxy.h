@@ -8,6 +8,7 @@
 #include "artemis-lib/bitstream.h"
 #include "hermes.h"
 #include "hermes_thread.h"
+#include "client_socket.h"
 
 namespace net = std::experimental::net;
 
@@ -18,29 +19,16 @@ public:
 private:
 	std::chrono::time_point<std::chrono::system_clock> last_fixup_time{std::chrono::system_clock::now()};
 	std::unordered_map<uint32_t,std::chrono::time_point<std::chrono::system_clock>> hull_id_change_time;
-	enum class proxy_mode {
-		single = 0,
-		multiplex = 1,
-	};
-	proxy_mode mode{proxy_mode::single};
 	hermes& cached_hermes;
-	std::optional<queued_nonblocking_socket> to_client;
+	std::unique_ptr<client_socket> to_client;
 public:
 	hermes_to_server to_server;
 
-	hermes_proxy(hermes& hermes, queued_nonblocking_socket s)
+	hermes_proxy(hermes& hermes, std::unique_ptr<client_socket>&& to_client)
 		: cached_hermes(hermes)
-		, to_client(std::move(s))
+		, to_client(std::move(to_client))
 		, to_server(hermes.context)
 	{}
-
-	// if constructed without a socket we are in multiplex mode
-	hermes_proxy(hermes& hermes)
-		: cached_hermes(hermes)
-		, to_server(hermes.context)
-	{
-		mode=proxy_mode::multiplex;
-	}
 /* hermes_cmd really should be replaced via the gm client
  * this is annoyingly hard to update and also annoyingly hard to test
  * commenting until it can be reimplemented
@@ -72,37 +60,9 @@ private:
 	// ship0=server0 ship1=server1
 	// as soon as we connect to ship1 (and thus switch to server1)
 	// the server will say "hello you are on ship0" which will result in hermes disconnecting and reconnecting
-
-	std::optional<std::deque<std::byte>> get_next_client_packet() {
-		if (mode==proxy_mode::single) {
-			if (!to_client.has_value()) {
-				throw std::runtime_error("somehow client socket is not set, this shoudnt be possible");
-			}
-			return to_client->get_next_artemis_packet();
-		} else {
-			throw std::runtime_error("TODO");
-		}
-	}
-
-	void enqueue_client_write_inner(const std::deque<std::byte>& buffer) {
-		if (mode==proxy_mode::single) {
-			if (!to_client.has_value()) {
-				throw std::runtime_error("somehow client socket is not set, this shoudnt be possible");
-			}
-			to_client->enqueue_write(buffer);
-		} else {
-			throw std::runtime_error("TODO");
-		}
-	}
 public:
 	void attempt_client_write() {
-		// we only need to do anything if we are in single mode
-		if (mode==proxy_mode::single) {
-			if (!to_client.has_value()) {
-				throw std::runtime_error("somehow client socket is not set, this shoudnt be possible");
-			}
-			to_client->attempt_write_buffer();
-		}
+		return to_client->attempt_write_buffer();
 	}
 
 	void enqueue_client_write(const std::vector<std::deque<std::byte>>& buffers) {
@@ -113,7 +73,7 @@ public:
 
 	void enqueue_client_write(const std::deque<std::byte>& buffer) {
 		parse_s2c_packet(buffer);
-		enqueue_client_write_inner(buffer);
+		to_client->enqueue_write(buffer);
 	}
 
 	std::vector<std::deque<std::byte>> stationary_fixup() {
@@ -250,7 +210,7 @@ public:
 			}
 			//finally we delete old packets sent from c2s as they may have changed selections of ships etc (and thus confuse users)
 			for (;;) {
-				if (!get_next_client_packet().has_value()) { // TODO check me
+				if (!to_client->get_next_artemis_packet().has_value()) { // TODO check me
 					break;
 				}
 			}
@@ -260,7 +220,7 @@ public:
 
 	void client_to_server() {
 		for (;;) {
-			auto packet=get_next_client_packet();
+			auto packet=to_client->get_next_artemis_packet();
 			if (packet.has_value()) {
 				parse_c2s_packet(*packet);
 				if (packet->size() >= 24) {

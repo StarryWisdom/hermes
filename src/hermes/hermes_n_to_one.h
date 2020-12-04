@@ -56,7 +56,7 @@ public:
 			const auto buffer{client.attempt_read(*cmd_len)};
 			if (buffer.has_value()) {
 				if (*next_cmd==mux_cmds::request_new_connection) {
-					cached_hermes.add_proxy(cached_hermes);
+					cached_hermes.add_proxy(std::make_unique<client_socket_multiplexer>(client_socket_multiplexer()));
 std::cout << "connect\n";
 				} else if (*next_cmd==mux_cmds::disconnect) {
 std::cout << "disconnect\n";

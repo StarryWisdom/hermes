@@ -24,7 +24,7 @@ void hermes::start_gm_accept() {
 void hermes::start_proxy_accept() {
 	artemis_accept.async_accept([this](const std::error_code ec,net::ip::tcp::socket sock) {
 		if (!ec) {
-			add_proxy(std::move(hermes_proxy(*this,std::move(sock))));
+			add_proxy(std::make_unique<client_real_socket>(std::move(sock)));
 		} else {
 			std::cout << "accept failed - " << ec.message() << "\n";//probably wants to be swaped to logging
 		}
@@ -43,8 +43,8 @@ void hermes::start_n_to_one_accept() {
 	});
 }
 
-void hermes::add_proxy(hermes_proxy&& prox) {
-	_impl->threads.insert(std::make_pair<uint32_t,hermes_proxy>(_impl->id++,std::move(prox)));
+void hermes::add_proxy(std::unique_ptr<client_socket>&& client) {
+	_impl->threads.emplace(_impl->id++,hermes_proxy(*this,std::move(client)));
 }
 
 void hermes::main_loop() {

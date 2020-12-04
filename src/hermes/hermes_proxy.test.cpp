@@ -4,13 +4,8 @@
 
 class hermes_proxy_test :public ::testing::Test {
 public:
-	hermes_proxy_test()
-		: proxy{hermes_class,std::move(tmp)}
-	{}
 	hermes hermes_class;
-	net::io_context context;
-	queued_nonblocking_socket tmp{context};
-	hermes_proxy proxy;
+	hermes_proxy proxy{hermes_class,std::make_unique<client_socket_multiplexer>(client_socket_multiplexer())};
 };
 
 TEST_F (hermes_proxy_test,fixup_single_change) {
