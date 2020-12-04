@@ -90,7 +90,6 @@ set(LETO_CORE_SRC
 	src/core-lib/packet_buffer.cpp
 
 	src/hermes/hermes.cpp
-	src/hermes/settings.cpp
 	src/dearimgui_link.cpp
 	${HERMES_PROTO_SRC}
 	${HERMES_PROTO_HDR}

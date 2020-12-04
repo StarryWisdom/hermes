@@ -8,6 +8,7 @@
 #include "hermes_watcher.h"
 #include "hermes_gm_stats.h"
 
+#include "settings_impl.h"
 namespace net = std::experimental::net;
 
 void hermes::start_gm_accept() {
