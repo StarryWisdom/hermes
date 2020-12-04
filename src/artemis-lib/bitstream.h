@@ -7,68 +7,9 @@
 #include <iterator>
 #include <queue>
 
-#include "core-lib/packet_buffer.h"
 #include "core-lib/memory_buffer.h"
 #include "pc.h"
 #include "npc.h"
-
-class object_update_bitfield {
-public:
-	// is_new refers to is this packet new
-	// if it is we want to send all fields we are given not just the ones that have changed
-	object_update_bitfield(bool is_new, uint32_t bools_num, uint8_t type, uint32_t id)
-		: bools_num(bools_num)
-		, is_new(is_new)
-	{
-		buffer.write<uint8_t>(type);
-		buffer.write<uint32_t>(id);
-		for (int32_t a=bools_num; a>=0; a-=8) {
-			buffer.write<uint8_t>(0);
-		}
-	}
-
-	template <typename T> void write(T val) {
-		if constexpr (std::is_same<std::decay<T>,std::decay<std::string>>::value) {
-			buffer.write_artemis_string(val);
-		} else {
-			buffer.write<T>(val);
-		}
-		if (current_bool>=bools_num) {
-			throw std::runtime_error("too many elements written in artemis_bitfield");
-		}
-		uint32_t write_offset=5+(current_bool/8);
-		std::byte orig_byte=buffer.buffer[write_offset];
-		uint32_t bit_num=current_bool-(8*(current_bool/8));
-		std::byte new_byte=orig_byte | std::byte(1 << bit_num);
-		buffer.buffer[write_offset]=new_byte;
-		anything_written=true;
-		current_bool++;
-	}
-
-	template <typename T> void write(T val_orig, T val_new) {
-		if (is_new || val_orig!=val_new) {
-			this->write(val_new);
-		} else {
-			current_bool++;
-		}
-	}
-
-	packet_buffer finalise() {
-		if (current_bool!=bools_num) {
-			throw std::runtime_error("incorrect number of element in artemis_bitfield");
-		}
-		if (!anything_written) {
-			return packet_buffer();
-		}
-		return buffer;
-	}
-private:
-	uint32_t bools_num;
-	bool is_new;
-	uint32_t current_bool{0};
-	packet_buffer buffer;
-	bool anything_written{false};
-};
 
 template <const uint8_t num_bools> class bitfield_header {
 public:
