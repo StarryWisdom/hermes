@@ -41,13 +41,6 @@ TEST_F (artemis_packet_test,object_bitstream) {
 	EXPECT_EQ(buffer::read_at<uint32_t>(buffer,25),0);
 }
 
-TEST_F (artemis_packet_test,make_post_header_buffer) {
-	buffer=artemis_packet::make_post_header_buffer();
-	EXPECT_EQ(artemis_packet::header_size,24u);
-	EXPECT_EQ(buffer.write_offset,artemis_packet::header_size);
-	buffer.read_offset=buffer.write_offset;//asserts have all worked so we dont need to test anything else
-}
-
 TEST_F (artemis_packet_test,make_climb_dive) {
 	buffer=artemis_packet::client_to_server::make_climb_dive(5);
 	check_value_int_header(artemis_packet::value_int::climb_dive);

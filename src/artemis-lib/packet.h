@@ -517,17 +517,12 @@ public:
 			return artemis_packet::make_buffer(direction::client_to_server,id,f);
 		}
 	};
-
-	static packet_buffer make_post_header_buffer() {
-		//the header will be filled in later - when we know the size of the packet
+private:
+	template <typename func> static packet_buffer make_buffer(direction direction, uint32_t id, func f) [[deprecated]]{
 		packet_buffer buffer;
 		buffer.realloc_if_needed(header_size);
 		buffer.write_offset=header_size;
-		return buffer;
-	}
-private:
-	template <typename func> static packet_buffer make_buffer(direction direction, uint32_t id, func f) [[deprecated]]{
-		packet_buffer buffer=make_post_header_buffer();
+
 		f(buffer);
 
 		auto size_offset=buffer.write_offset;
