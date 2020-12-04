@@ -22,3 +22,7 @@ log eng settings over time in gm client
 add reminder RE firewall
 
 there is some sort of data savings for merging object_bitstreams - consider doing this
+consider exporting the following things over to gm screen
+1) make_sound_effect
+2) border war middile element
+3) export make_object_text

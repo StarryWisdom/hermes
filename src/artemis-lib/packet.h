@@ -204,28 +204,10 @@ public:
 			return buffer;
 		}
 
-		static packet_buffer make_connected(uint32_t unknown, float old_version, uint32_t major, uint32_t minor, uint32_t patch) {
-			return make_buffer(connected_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(unknown);
-				buffer.write<float> (old_version);
-				buffer.write<uint32_t>(major);
-				buffer.write<uint32_t>(minor);
-				buffer.write<uint32_t>(patch);
-			});
-		}
-
-		static packet_buffer make_object_delete(uint8_t type, uint32_t id) {
-			return make_buffer(object_delete_jam32,[=](packet_buffer& buffer) {
+		static packet_buffer make_object_delete(uint8_t type, uint32_t id) [[deprecated]] {
+			return artemis_packet::make_buffer(direction::server_to_client,object_delete_jam32,[=](packet_buffer& buffer) {
 				buffer.write<uint8_t>(type);
 				buffer.write<uint32_t>(id);
-			});
-		}
-
-		static packet_buffer make_object_text(uint32_t obj, uint8_t type, std::string text) {
-			return make_buffer(object_text_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(obj);
-				buffer.write<uint8_t>(type);
-				buffer.write_artemis_string(text);
 			});
 		}
 
@@ -248,106 +230,12 @@ public:
 			return buffer;
 		}
 
-		static packet_buffer make_heartbeat() {
-			return make_buffer(heartbeat_jam32,[](packet_buffer&) {});
-		}
-
-		static packet_buffer make_explosion(uint32_t type, uint32_t id) {
-			return make_simple_event(simple_event::explosion,[=](packet_buffer& buffer) {
-				buffer.write(type);
-				buffer.write(id);
-			});
-		}
-
-		static packet_buffer make_detonation(uint32_t type, uint32_t id) {
-			return make_simple_event(simple_event::detonation,[=](packet_buffer& buffer) {
-				buffer.write(type);
-				buffer.write(id);
-			});
-		}
-
-		static packet_buffer make_all_ship_settings(const artemis_packet::ship_settings set1, const artemis_packet::ship_settings set2, const artemis_packet::ship_settings set3, const artemis_packet::ship_settings set4, const artemis_packet::ship_settings set5, const artemis_packet::ship_settings set6, const artemis_packet::ship_settings set7, const artemis_packet::ship_settings set8) {
-			return make_simple_event(simple_event::all_ship_settings,[=](packet_buffer& buffer) {
-				buffer.write<packet_buffer>(set1.serialise());
-				buffer.write<packet_buffer>(set2.serialise());
-				buffer.write<packet_buffer>(set3.serialise());
-				buffer.write<packet_buffer>(set4.serialise());
-				buffer.write<packet_buffer>(set5.serialise());
-				buffer.write<packet_buffer>(set6.serialise());
-				buffer.write<packet_buffer>(set7.serialise());
-				buffer.write<packet_buffer>(set8.serialise());
-			});
-		}
-
-		static packet_buffer make_attack(uint32_t id, uint32_t port, uint32_t origin_type, uint32_t target_type ,uint32_t origin ,uint32_t target, float x,float y,float z,uint32_t manual) {
-			return make_buffer(attack_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(id);
-				buffer.write<uint32_t>(9);//type
-				buffer.write<uint32_t>(0);//beam port - FIX WRONG
-				buffer.write<uint32_t>(port);
-				buffer.write<uint32_t>(origin_type);
-				buffer.write<uint32_t>(target_type);
-				buffer.write<uint32_t>(0);
-				buffer.write<uint32_t>(origin);
-				buffer.write<uint32_t>(target);
-				buffer.write<float>(x);
-				buffer.write<float>(y);
-				buffer.write<float>(z);
-				buffer.write<uint32_t>(manual);
-			});
-		};
-
-		static packet_buffer make_key_capture(uint8_t capture) {
-			return make_simple_event(simple_event::key_capture,[=](packet_buffer& buffer) {
-				buffer.write<uint8_t>(capture);
-			});
-		}
-
-		static packet_buffer make_plain_text_greeting(std::string msg) {
-			return make_buffer(plain_text_greeting_jam32,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(msg.size());//bleh this is off by one according to nicks parser, I'm less than certian is null terminated correctly
-				buffer.write<std::string>(msg);
-			});
-		}
-
-		static packet_buffer make_player_ship_damage(uint32_t index, float duration) {
-			return make_simple_event(simple_event::player_ship_damage,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(index);
-				buffer.write<float>(duration);
-			});
-		};
-
 		static std::deque<std::byte> make_popup(std::string msg) {
 			std::deque<std::byte> buffer;
 			buffer::write_artemis_string(buffer,msg);
 
 			add_simple_event_header(buffer,simple_event::popup);
 			return buffer;
-		}
-
-		static packet_buffer make_docked(uint32_t id) {
-			return make_simple_event(simple_event::docked,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(id);
-			});
-		}
-
-		static packet_buffer start_game(uint32_t difficulty, uint32_t mode) {
-			return make_buffer(start_game_jam32,[=](packet_buffer& buffer) {
-					buffer.write(difficulty);
-					buffer.write(mode);
-				});
-		}
-
-		static packet_buffer make_perspective() {
-			return make_simple_event(simple_event::perspective,[](packet_buffer& buffer) {
-					buffer.write<uint32_t>(0);
-			});
-		}
-
-		static packet_buffer make_sound_effect(const std::string& file) {
-			return make_simple_event(simple_event::sound_effect,[=](packet_buffer& buffer) {
-					buffer.write_artemis_string(file);
-			});
 		}
 	private:
 		static void add_simple_event_header(std::deque<std::byte>& buffer, const simple_event subtype) {
@@ -358,16 +246,6 @@ public:
 		static void add_artemis_header(std::deque<std::byte>& buffer, uint32_t id) {
 			artemis_packet::add_artemis_header(buffer,direction::server_to_client,id);
 
-		}
-
-		template <typename fun> static packet_buffer make_simple_event(simple_event subtype, fun f) [[deprecated]] {
-			return make_buffer(simple_event_jam32,[=](packet_buffer& buffer) {
-					buffer.write<uint32_t>(static_cast<uint32_t>(subtype));
-					f(buffer);
-				});
-		}
-		template <typename fun> static packet_buffer make_buffer(uint32_t id, fun f) [[deprecated]] {
-			return artemis_packet::make_buffer(direction::server_to_client,id,f);
 		}
 	};
 
@@ -449,24 +327,6 @@ public:
 		inline static const uint32_t gm_text_jam32{jam32::value("gmText")};
 		inline static const uint32_t beam_request_jam32{jam32::value("beamRequest")};
 
-		static packet_buffer make_convert_torpedo(const float direction) {
-			return make_value_four_int(value_four_ints::convert_torpedo,[=](packet_buffer& buffer) {
-				buffer.write<float>(direction);
-				buffer.write<uint32_t>(0);
-				buffer.write<uint32_t>(0);
-				buffer.write<uint32_t>(0);
-			});
-		}
-
-		static packet_buffer make_load_tube(const uint32_t tube_num, const uint32_t type) {
-			return make_value_four_int(value_four_ints::load_tube,[=](packet_buffer& buffer) {
-				buffer.write<uint32_t>(tube_num);
-				buffer.write<uint32_t>(type);
-				buffer.write<uint32_t>(0);
-				buffer.write<uint32_t>(0);
-			});
-		}
-
 		static packet_buffer make_ship_settings(const ship_settings settings) {
 			return make_value_int(value_int::ship_settings,[=](packet_buffer& buffer) {
 					buffer.write<packet_buffer>(settings.serialise());
@@ -486,35 +346,12 @@ public:
 				});
 		}
 
-		static packet_buffer make_request_eng_grid_update() {
-			return make_value_int(value_int::request_eng_grid_update,[=](packet_buffer& buffer) {
-					buffer.write<uint32_t>(0);
-				});
-		}
-
-		static packet_buffer make_climb_dive(int32_t val) {
-			return make_value_int(value_int::climb_dive,[=](packet_buffer& buffer) {
-					buffer.write<int32_t>(val);
-				});
-		}
-
 	private:
-		template <typename func> static packet_buffer make_value_int (value_int subtype, func f) {
-			return make_buffer(value_int_jam32,[=](packet_buffer& buffer) {
+		template <typename func> static packet_buffer make_value_int (value_int subtype, func f) [[deprecated]] {
+			return artemis_packet::make_buffer(direction::client_to_server,value_int_jam32,[=](packet_buffer& buffer) {
 					buffer.write<uint32_t>(static_cast<uint32_t>(subtype));
 					f(buffer);
 				});
-		}
-
-		template <typename func> static packet_buffer make_value_four_int (value_four_ints subtype, func f) {
-			return make_buffer(value_four_ints_jam32,[=](packet_buffer& buffer) {
-					buffer.write<uint32_t>(static_cast<uint32_t>(subtype));
-					f(buffer);
-			});
-		}
-
-		template <typename fun> static packet_buffer make_buffer(uint32_t id, fun f) {
-			return artemis_packet::make_buffer(direction::client_to_server,id,f);
 		}
 	};
 private:
