@@ -88,7 +88,6 @@ set(LETO_CORE_SRC
 	libs/lua/linit.cpp
 
 	src/core-lib/packet_buffer.cpp
-	src/core-lib/memory_buffer.cpp
 
 	src/hermes/hermes.cpp
 	src/hermes/settings.cpp
